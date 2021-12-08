@@ -57,6 +57,20 @@ class Sigma16Disassembler:
         operation = opcode_mapping[instr[0]]
         return f"{operation}{tab}R{instr[1]},R{instr[2]},R{instr[3]}", operation
 
+    def __disassemble_RX(self, instr, displacement):
+        """
+        Disassemble an RX instruction
+        :param instr: The hex string representing the first 16 bytes of the instruction
+        :param displacement: A memory address which is used as a displacement in the RX instruction
+        :return: (str) The assembly instruction result of the disassembly
+        """
+        tab = '\t'
+        opcode_mapping = {"0": "lea", "1": "load", "2": "store", "3": "jump", "4": "jal",
+                          "5": "jumpc0", "6": "jumpc1", "7": "jumpn", "8": "jumpz", "9": "jumpnz",
+                          "a": "jumpp", "b": "testset"}
+        operation = opcode_mapping[instr[3]]
+        return f"{operation}{tab}R{instr[1]},{displacement}[{instr[2]}]", operation
+
     def __increment_pointers(self, n):
         """
         Increment both the instruction pointer and the memory counter
@@ -83,7 +97,10 @@ class Sigma16Disassembler:
                     break
 
             elif instr_type == "RX":
-                # Currently skip forward by 2 instructions
+                displacement = self.obj_code["data"][self.ip+1]
+                assembly_instr, operation = self.__disassemble_RX(current_instruction, displacement)
+                self.assembly[self.mem_count] = assembly_instr
+                self.assembly_instructions.append(assembly_instr)
                 self.__increment_pointers(2)
                 continue
 
