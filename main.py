@@ -71,6 +71,32 @@ class Sigma16Disassembler:
         operation = opcode_mapping[instr[3]]
         return f"{operation}{tab}R{instr[1]},{displacement}[{instr[2]}]", operation
 
+    def __disassemble_EXP1(self, instr):
+        opcode_mapping = {"00": "resume"}
+        opcode = instr[2] + instr[3]
+        return f"{opcode_mapping[opcode]}"
+
+    def __disassemble_EXP2(self, w1, w2):
+        return None
+
+    def __disassemble_EXP(self, w1, w2=None):
+        """
+        Disassemble an EXP instruction
+        :param w1: The first word of the instruction
+        :param w2: The (optional) second word of the instruction
+        :return: (str) The assembly instruction result of disassembly
+        """
+        secondary_opcode = int(w1[2] + w1[3], base=16)
+        assembly_instr = None
+        exp1_or_exp2 = None
+        if secondary_opcode == 0:
+            assembly_instr = self.__disassemble_EXP1(w1)
+            exp1_or_exp2 = 1
+        elif secondary_opcode in range(1, 11):
+            assembly_instr = self.__disassemble_EXP2(w1, w2)
+            exp1_or_exp2 = 2
+        return assembly_instr, exp1_or_exp2
+
     def __amend_relocations(self):
         """
         Iterates over all relocations, and replaces the displacements in RX instructions
@@ -123,7 +149,11 @@ class Sigma16Disassembler:
                 continue
 
             elif instr_type == "EXP":
-                self.__increment_pointers(2)
+                second_word = self.obj_code["data"][self.ip+1]
+                assembly_instr, exp_instr_type = self.__disassemble_EXP(current_instruction, second_word)
+                self.assembly[self.mem_count] = assembly_instr
+                self.assembly_instructions.append(assembly_instr)
+                self.__increment_pointers(exp_instr_type)
                 continue
 
         # Iterate over the 'variables' declared at the end of the data section
