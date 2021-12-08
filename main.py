@@ -71,6 +71,24 @@ class Sigma16Disassembler:
         operation = opcode_mapping[instr[3]]
         return f"{operation}{tab}R{instr[1]},{displacement}[{instr[2]}]", operation
 
+    def __amend_relocations(self):
+        """
+        Iterates over all relocations, and replaces the displacements in RX instructions
+        with the pre-allocated variable at the address defined by the displacement
+        :return: None
+        """
+        tab = '\t'
+        for relocation in self.obj_code["relocate"]:
+            if (int(relocation, base=16) - 1) in self.assembly.keys():
+                # Replace the memory address in the displacement
+                original_instruction = self.assembly[int(relocation, base=16) - 1]
+                instr_sections = original_instruction.split()
+                operand_sections = instr_sections[1].split(',')
+                operands = operand_sections[1].split('[')
+                variable_relocation = self.assembly[int(operands[0], base=16)].split()[0]
+                new_instruction = f"{instr_sections[0]}{tab}{operand_sections[0]},{variable_relocation}[{operands[-1]}"
+                self.assembly[int(relocation, base=16) - 1] = new_instruction
+
     def __increment_pointers(self, n):
         """
         Increment both the instruction pointer and the memory counter
@@ -119,6 +137,7 @@ class Sigma16Disassembler:
             self.__increment_pointers(1)
             var_counter += 1
 
+        self.__amend_relocations()
         return self.construct_assembly_output()
 
 
