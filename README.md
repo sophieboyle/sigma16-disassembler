@@ -12,7 +12,3 @@
 ## Note on Sigma16
 
 - [Sigma16](https://github.com/jtod/Sigma16) is an architecture created by [John T O'Donnell](https://github.com/jtod), former lecturer at the University of Glasgow.
-
-## TODO
-
-- Support labels
