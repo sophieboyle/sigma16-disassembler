@@ -4,6 +4,7 @@
 - Currently supported instructions
   - RRR
   - RX
+  - EXP
 - Note that arrays will be formatted with each element given an arbritrary variable name
   - This is because there is no information about variable name declarations in the object file to recover
   - This will not affect the actual operation of the code itself
@@ -14,4 +15,4 @@
 
 ## TODO
 
-- Support EXP instructions
+- Support labels
