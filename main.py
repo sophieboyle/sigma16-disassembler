@@ -55,7 +55,8 @@ class Sigma16Disassembler:
                           '5': "muln", '6': "divn", '7': "cmp", '8': "push", '9': "pop",
                           'a': "top", 'b': "trap", 'c': "trap"}
         operation = opcode_mapping[instr[0]]
-        return f"{operation}{tab}R{instr[1]},R{instr[2]},R{instr[3]}", operation
+        return f"{operation}{tab}R{int(instr[1], base=16)}," \
+               f"R{int(instr[2], base=16)},R{int(instr[3], base=16)}", operation
 
     def __disassemble_RX(self, instr, displacement):
         """
@@ -69,19 +70,68 @@ class Sigma16Disassembler:
                           "5": "jumpc0", "6": "jumpc1", "7": "jumpn", "8": "jumpz", "9": "jumpnz",
                           "a": "jumpp", "b": "testset"}
         operation = opcode_mapping[instr[3]]
-        return f"{operation}{tab}R{instr[1]},{displacement}[{instr[2]}]", operation
+        return f"{operation}{tab}R{int(instr[1], base=16)}," \
+               f"{displacement}[{int(instr[2], base=16)}]", operation
 
     def __disassemble_EXP1(self, instr):
+        """
+        Disassemble an EXP1 instruction
+        :param instr: The hex string representing the instruction
+        :return: (str) The assembly instruction result of the disassembly
+        """
         opcode_mapping = {"00": "resume"}
         opcode = instr[2] + instr[3]
         return f"{opcode_mapping[opcode]}"
 
     def __disassemble_EXP2(self, w1, w2):
-        return None
+        """
+        Disassemble an EXP2 instruction
+        :param w1: The first word of the EXP2 instruction
+        :param w2: The second word of the EXP2 instruction
+        :return: (str) The assembly instruction result of the disassembly
+        """
+        tab = '\t'
+        opcode_mapping = {"01": "save", "02": "restore", "03": "shiftl", "04": "shiftr",
+                          "05": "logicw", "06": "logicb", "07": "extract", "08": "extracti",
+                          "09": "getctl", "0a": "putctl"}
+
+        opcode = w1[2] + w1[3]
+        operation = opcode_mapping[opcode]
+        rd = w1[1]
+        re = w2[0]
+        rf = w2[1]
+        rg = w2[2]
+        rh = w2[3]
+        combined_gh_operand = int(rg+rh, base=16)
+
+        if operation in ["save", "restore"]:
+            return f"{operation}{tab}R{rd},R{re},{combined_gh_operand}[R{int(rf, base=16)}]"
+        elif operation in ["shiftl", "shiftr"]:
+            return f"{operation}{tab}R{rd},R{rf},{combined_gh_operand}"
+        elif operation in ["logicw"]:
+            return f"{operation}{tab}R{rd},R{re},R{rf},{combined_gh_operand}"
+        elif operation in ["logicb"]:
+            return f"{operation}{tab}R{rd},{int(re, base=16)}," \
+                   f"{int(rf, base=16)},{int(rg, base=16)},{int(rh, base=16)}"
+        elif operation in ["extract", "extracti"]:
+            return f"{operation}{tab}R{rd},{int(re, base=16)},{int(rf, base=16)}," \
+                   f"R{rg},{int(rh, base=16)}"
+        elif operation in ["getctl", "putctl"]:
+            operand = None
+            ctl_r2_operands = {"200": "req"}
+            ctl_r4_operands = {"000": "status", "100": "mask", "200": "req",
+                               "300": "istat", "400": "ipc", "500": "vect", "600": "psegBeg",
+                               "700": "psegEnd", "800": "dsegBeg", "900": "dsegEnd"}
+            if re == '2':
+                operand = ctl_r2_operands[rf + rg + rh]
+            elif re == '4':
+                operand = ctl_r4_operands[rf + rg + rh]
+            return f"{operation}{tab}R{re},{operand}"
 
     def __disassemble_EXP(self, w1, w2=None):
         """
-        Disassemble an EXP instruction
+        Disassemble an EXP instruction. Note that the second word passed is not used
+        if the instruction is of type EXP1
         :param w1: The first word of the instruction
         :param w2: The (optional) second word of the instruction
         :return: (str) The assembly instruction result of disassembly
