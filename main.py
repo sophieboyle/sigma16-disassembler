@@ -107,7 +107,8 @@ class Sigma16Disassembler:
         if operation in ["save", "restore"]:
             return f"{operation}{tab}R{rd},R{re},{combined_gh_operand}[R{int(rf, base=16)}]"
         elif operation in ["shiftl", "shiftr"]:
-            return f"{operation}{tab}R{rd},R{rf},{combined_gh_operand}"
+            return f"{operation}{tab}R{int(rd, base=16)}," \
+                   f"R{int(re, base=16)},{int(rf, base=16)}"
         elif operation in ["logicw"]:
             return f"{operation}{tab}R{rd},R{re},R{rf},{combined_gh_operand}"
         elif operation in ["logicb"]:
