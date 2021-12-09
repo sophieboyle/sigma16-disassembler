@@ -105,18 +105,21 @@ class Sigma16Disassembler:
         combined_gh_operand = int(rg+rh, base=16)
 
         if operation in ["save", "restore"]:
-            return f"{operation}{tab}R{rd},R{re},{combined_gh_operand}[R{int(rf, base=16)}]"
+            return f"{operation}{tab}R{int(rd, base=16)}," \
+                   f"R{int(re, base=16)},{combined_gh_operand}[R{int(rf, base=16)}]"
         elif operation in ["shiftl", "shiftr"]:
             return f"{operation}{tab}R{int(rd, base=16)}," \
                    f"R{int(re, base=16)},{int(rf, base=16)}"
         elif operation in ["logicw"]:
-            return f"{operation}{tab}R{rd},R{re},R{rf},{combined_gh_operand}"
+            return f"{operation}{tab}R{int(rd, base=16)}," \
+                   f"R{int(re, base=16)},R{int(rf, base=16)},{combined_gh_operand}"
         elif operation in ["logicb"]:
-            return f"{operation}{tab}R{rd},{int(re, base=16)}," \
+            return f"{operation}{tab}R{int(rd, base=16)},{int(re, base=16)}," \
                    f"{int(rf, base=16)},{int(rg, base=16)},{int(rh, base=16)}"
         elif operation in ["extract", "extracti"]:
-            return f"{operation}{tab}R{rd},{int(re, base=16)},{int(rf, base=16)}," \
-                   f"R{rg},{int(rh, base=16)}"
+            return f"{operation}{tab}R{int(rd, base=16)},{int(re, base=16)}," \
+                   f"{int(rf, base=16)}," \
+                   f"R{int(rg, base=16)},{int(rh, base=16)}"
         elif operation in ["getctl", "putctl"]:
             operand = None
             ctl_r2_operands = {"200": "req"}
@@ -127,7 +130,7 @@ class Sigma16Disassembler:
                 operand = ctl_r2_operands[rf + rg + rh]
             elif re == '4':
                 operand = ctl_r4_operands[rf + rg + rh]
-            return f"{operation}{tab}R{re},{operand}"
+            return f"{operation}{tab}R{int(re, base=16)},{operand}"
 
     def __disassemble_EXP(self, w1, w2=None):
         """
